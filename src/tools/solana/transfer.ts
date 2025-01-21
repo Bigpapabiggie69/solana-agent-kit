@@ -5,7 +5,10 @@ import {
   getAssociatedTokenAddress,
   createTransferInstruction,
   getMint,
+  getAccount,
+  createAssociatedTokenAccountInstruction,
 } from "@solana/spl-token";
+import { sendTx } from "../../utils/send_tx";
 
 /**
  * Transfer SOL or SPL tokens to a recipient
@@ -34,7 +37,8 @@ export async function transfer(
         }),
       );
 
-      tx = await agent.connection.sendTransaction(transaction, [agent.wallet]);
+      // Use sendTx utility for sending transactions
+      tx = await sendTx(agent, transaction.instructions);
     } else {
       // Transfer SPL token
       const fromAta = await getAssociatedTokenAddress(
@@ -43,11 +47,28 @@ export async function transfer(
       );
       const toAta = await getAssociatedTokenAddress(mint, to);
 
+      // Check if the recipient's associated token account exists
+      const toAtAcc = await getAccount(agent.connection, toAta);
+      const transaction = new Transaction();
+
+      // If it doesn't exist, create the associated token account
+      if (!toAtAcc) {
+        transaction.add(
+          createAssociatedTokenAccountInstruction(
+            agent.wallet_address,
+            toAta,
+            to,
+            mint,
+          ),
+        );
+      }
+
       // Get mint info to determine decimals
       const mintInfo = await getMint(agent.connection, mint);
       const adjustedAmount = amount * Math.pow(10, mintInfo.decimals);
 
-      const transaction = new Transaction().add(
+      // Add transfer instruction
+      transaction.add(
         createTransferInstruction(
           fromAta,
           toAta,
@@ -56,7 +77,8 @@ export async function transfer(
         ),
       );
 
-      tx = await agent.connection.sendTransaction(transaction, [agent.wallet]);
+      // Use sendTx utility for sending transactions
+      tx = await sendTx(agent, transaction.instructions);
     }
 
     return tx;

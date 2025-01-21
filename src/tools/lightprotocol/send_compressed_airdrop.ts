@@ -214,45 +214,41 @@ async function processAll(
     }
   };
 
-  for (let i = 0; i < instructionSets.length; i += MAX_CONCURRENT_TXS) {
-    const batchPromises = instructionSets
-      .slice(i, i + MAX_CONCURRENT_TXS)
-      .map((instructions, idx) =>
-        sendTransactionWithRetry(
-          rpc,
-          instructions,
-          payer,
-          lookupTableAccount,
-          i + idx,
-        ).then((signature) => {
-          confirmedCount++;
-          log("\r" + renderProgressBar(confirmedCount, totalBatches));
-          return signature;
-        }),
-      );
-
-    const batchResults = await Promise.allSettled(batchPromises);
-    results.push(...batchResults);
-  }
-
-  log("\n");
-
-  const failures = results
-    .filter((r) => r.status === "rejected")
-    .map((r, idx) => ({
-      index: idx,
-      error: (r as PromiseRejectedResult).reason,
-    }));
-
-  if (failures.length > 0) {
-    throw new Error(
-      `Failed to process ${failures.length} batches: ${failures
-        .map((f) => f.error)
-        .join(", ")}`,
-    );
-  }
-
-  return results.map((r) => (r as PromiseFulfilledResult<string>).value);
+  throw new Error("Not implemented");
+  // for (let i = 0; i < instructionSets.length; i += MAX_CONCURRENT_TXS) {
+  //   const batchPromises = instructionSets
+  //     .slice(i, i + MAX_CONCURRENT_TXS)
+  //     .map((instructions, idx) =>
+  //       sendTransactionWithRetry(
+  //         rpc,
+  //         instructions,
+  //         payer,
+  //         lookupTableAccount,
+  //         i + idx,
+  //       ).then((signature) => {
+  //         confirmedCount++;
+  //         log("\r" + renderProgressBar(confirmedCount, totalBatches));
+  //         return signature;
+  //       }),
+  //     );
+  //   const batchResults = await Promise.allSettled(batchPromises);
+  //   results.push(...batchResults);
+  // }
+  // log("\n");
+  // const failures = results
+  //   .filter((r) => r.status === "rejected")
+  //   .map((r, idx) => ({
+  //     index: idx,
+  //     error: (r as PromiseRejectedResult).reason,
+  //   }));
+  // if (failures.length > 0) {
+  //   throw new Error(
+  //     `Failed to process ${failures.length} batches: ${failures
+  //       .map((f) => f.error)
+  //       .join(", ")}`,
+  //   );
+  // }
+  // return results.map((r) => (r as PromiseFulfilledResult<string>).value);
 }
 
 async function sendTransactionWithRetry(

@@ -61,7 +61,7 @@ export async function orcaOpenSingleSidedPosition(
   inputAmount: Decimal,
 ): Promise<string> {
   try {
-    const wallet = new Wallet(agent.wallet);
+    const wallet = agent.getAnchorWallet();
     const ctx = WhirlpoolContext.from(
       agent.connection,
       wallet,

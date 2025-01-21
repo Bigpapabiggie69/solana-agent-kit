@@ -1,5 +1,5 @@
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { BN } from "@coral-xyz/anchor";
+import { Connection, PublicKey, VersionedTransaction } from "@solana/web3.js";
+import { BN, Wallet } from "@coral-xyz/anchor";
 import bs58 from "bs58";
 import Decimal from "decimal.js";
 import {
@@ -134,6 +134,7 @@ import {
   FlashCloseTradeParams,
   HeliusWebhookIdResponse,
   HeliusWebhookResponse,
+  WalletAdapter,
 } from "../types";
 import {
   DasApiAsset,
@@ -149,39 +150,26 @@ import {
  *
  * @class SolanaAgentKit
  * @property {Connection} connection - Solana RPC connection
- * @property {Keypair} wallet - Wallet keypair for signing transactions
+ * @property {WalletAdapter} wallet - Wallet that implements WalletAdapter for signing transactions
  * @property {PublicKey} wallet_address - Public key of the wallet
  * @property {Config} config - Configuration object
  */
 export class SolanaAgentKit {
   public connection: Connection;
-  public wallet: Keypair;
+  public wallet: WalletAdapter;
   public wallet_address: PublicKey;
   public config: Config;
 
-  /**
-   * @deprecated Using openai_api_key directly in constructor is deprecated.
-   * Please use the new constructor with Config object instead:
-   * @example
-   * const agent = new SolanaAgentKit(privateKey, rpcUrl, {
-   *   OPENAI_API_KEY: 'your-key'
-   * });
-   */
+
   constructor(
-    private_key: string,
-    rpc_url: string,
-    openai_api_key: string | null,
-  );
-  constructor(private_key: string, rpc_url: string, config: Config);
-  constructor(
-    private_key: string,
+    wallet: WalletAdapter,
     rpc_url: string,
     configOrKey: Config | string | null,
   ) {
     this.connection = new Connection(
       rpc_url || "https://api.mainnet-beta.solana.com",
     );
-    this.wallet = Keypair.fromSecretKey(bs58.decode(private_key));
+    this.wallet = wallet;
     this.wallet_address = this.wallet.publicKey;
 
     // Handle both old and new patterns
@@ -191,6 +179,16 @@ export class SolanaAgentKit {
       this.config = configOrKey;
     }
   }
+  getAnchorWallet(): Wallet {
+    const adapter = this.wallet;
+    return {
+      publicKey: adapter.publicKey,
+      signTransaction: adapter.signTransaction.bind(adapter),
+      signAllTransactions: adapter.signAllTransactions.bind(adapter),
+      payer: adapter as any,
+    };
+  }
+  
 
   // Tool methods
   async requestFaucetFunds() {
@@ -270,9 +268,10 @@ export class SolanaAgentKit {
     inputAmount: number,
     inputMint?: PublicKey,
     slippageBps: number = DEFAULT_OPTIONS.SLIPPAGE_BPS,
-  ): Promise<string> {
+  ): Promise<VersionedTransaction> {
     return trade(this, outputMint, inputAmount, inputMint, slippageBps);
   }
+  
 
   async limitOrder(
     marketId: PublicKey,

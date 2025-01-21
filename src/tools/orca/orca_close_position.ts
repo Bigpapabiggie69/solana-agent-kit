@@ -48,7 +48,7 @@ export async function orcaClosePosition(
   positionMintAddress: PublicKey,
 ): Promise<string> {
   try {
-    const wallet = new Wallet(agent.wallet);
+    const wallet = agent.getAnchorWallet();
     const ctx = WhirlpoolContext.from(
       agent.connection,
       wallet,

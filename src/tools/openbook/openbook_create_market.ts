@@ -15,7 +15,7 @@ export async function openbookCreateMarket(
   tickSize: number = 0.01,
 ): Promise<string[]> {
   const raydium = await Raydium.load({
-    owner: agent.wallet,
+    owner: agent.wallet.publicKey,
     connection: agent.connection,
   });
 

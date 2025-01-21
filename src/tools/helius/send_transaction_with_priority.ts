@@ -47,7 +47,7 @@ export async function sendTransactionWithPriorityFee(
       });
 
       transaction.add(transferIx);
-      transaction.sign(agent.wallet);
+      const signedTx = await agent.wallet.signTransaction(transaction);
 
       const response = await fetch(
         `https://mainnet.helius-rpc.com/?api-key=${agent.config.HELIUS_API_KEY}`,
@@ -60,7 +60,7 @@ export async function sendTransactionWithPriorityFee(
             method: "getPriorityFeeEstimate",
             params: [
               {
-                transaction: bs58.encode(transaction.serialize()),
+                transaction: bs58.encode(signedTx.serialize()),
                 options: { priorityLevel: priorityLevel },
               },
             ],
