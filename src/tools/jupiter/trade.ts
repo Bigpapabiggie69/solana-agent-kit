@@ -7,6 +7,7 @@ import {
   JUP_REFERRAL_ADDRESS,
 } from "../../constants";
 import { getMint } from "@solana/spl-token";
+
 /**
  * Swap tokens using Jupiter Exchange
  * @param agent SolanaAgentKit instance
@@ -14,17 +15,15 @@ import { getMint } from "@solana/spl-token";
  * @param inputAmount Amount to swap (in token decimals)
  * @param inputMint Source token mint address (defaults to USDC)
  * @param slippageBps Slippage tolerance in basis points (default: 300 = 3%)
- * @returns Transaction signature
+ * @returns Unsigned transaction
  */
-
 export async function trade(
   agent: SolanaAgentKit,
   outputMint: PublicKey,
   inputAmount: number,
   inputMint: PublicKey = TOKENS.USDC,
-  // @deprecated use dynamicSlippage instead
   slippageBps: number = DEFAULT_OPTIONS.SLIPPAGE_BPS,
-): Promise<string> {
+): Promise<VersionedTransaction> {
   try {
     // Check if input token is native SOL
     const isNativeSol = inputMint.equals(TOKENS.SOL);
@@ -88,15 +87,13 @@ export async function trade(
         }),
       })
     ).json();
+
     // Deserialize transaction
     const swapTransactionBuf = Buffer.from(swapTransaction, "base64");
-
     const transaction = VersionedTransaction.deserialize(swapTransactionBuf);
-    // Sign and send transaction
-    transaction.sign([agent.wallet]);
-    const signature = await agent.connection.sendTransaction(transaction);
 
-    return signature;
+    // Return unsigned transaction for external signing
+    return transaction;
   } catch (error: any) {
     throw new Error(`Swap failed: ${error.message}`);
   }
