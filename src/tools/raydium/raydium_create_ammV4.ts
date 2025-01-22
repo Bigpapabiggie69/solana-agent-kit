@@ -19,7 +19,7 @@ export async function raydiumCreateAmmV4(
   startTime: BN,
 ): Promise<string> {
   const raydium = await Raydium.load({
-    owner: agent.wallet,
+    owner: agent.wallet.publicKey,
     connection: agent.connection,
   });
 

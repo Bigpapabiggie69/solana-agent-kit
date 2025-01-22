@@ -18,7 +18,7 @@ export async function raydiumCreateClmm(
   startTime: BN,
 ): Promise<string> {
   const raydium = await Raydium.load({
-    owner: agent.wallet,
+    owner: agent.wallet.publicKey,
     connection: agent.connection,
   });
 

@@ -41,7 +41,7 @@ export async function listNFTForSale(
 
     const provider = new AnchorProvider(
       agent.connection,
-      new Wallet(agent.wallet),
+      agent.getAnchorWallet(),
       AnchorProvider.defaultOptions(),
     );
 
@@ -79,7 +79,7 @@ export async function cancelListing(
 ): Promise<string> {
   const provider = new AnchorProvider(
     agent.connection,
-    new Wallet(agent.wallet),
+    agent.getAnchorWallet(),
     AnchorProvider.defaultOptions(),
   );
 
